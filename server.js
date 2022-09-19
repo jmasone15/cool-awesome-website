@@ -1,26 +1,45 @@
+// Dependencies
 const express = require("express");
-const http = require('http')
+const morgan = require("morgan");
+const path = require("path");
+const http = require('http');
+
+// Express Initilization
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use(morgan("tiny"));
+app.use(express.static(path.join(__dirname, "client")));
 
+// Socket Setup
 const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
 
-app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/client/index.html');
-  });
+// Socket
+io.on("connection", socket => {
+  socket.emit("init", { data: "Hello, world!" });
+});
 
-  io.on('connection', (socket) => {
-    console.log('a user connected');
-    socket.on('disconnect', () => {
-      console.log('user disconnected');
-    });
+io.on("connection", socket => {
+  socket.on("join", room => {
+      socket.join(room);
+      console.log(`A user joined room: ${room}`);
+      io.to(room).emit("joined", room)
   });
+});
 
+io.on("connection", socket => {
+  socket.on("message", (msg, room) => {
+      console.log(`Room: ${room} | Message: ${msg}`);
+      io.to(room).emit("message", msg)
+  })
+});
+
+// Server Start Up
 server.listen(PORT, () => {
-    console.log(`🌎 Server Listening at: http://localhost:${PORT} 🌎`)
+  console.log(`🌎 Server Listening at: http://localhost:${PORT} 🌎`)
 });
