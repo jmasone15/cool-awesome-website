@@ -1,6 +1,6 @@
 const socket = io();
-const btnOne = document.getElementById("button1");
-const btnTwo = document.getElementById("button2");
+const createBtn = document.getElementById("create");
+const joinBtn = document.getElementById("join");
 const roomHeader = document.getElementById("room-header");
 const form = document.getElementById("form");
 const input = document.getElementById("input");
@@ -9,12 +9,19 @@ const defaultDiv = document.getElementById("default");
 const roomDiv = document.getElementById("room");
 let currentRoom;
 
-socket.on("init", msg => {
-    console.log(msg);
-});
+createBtn.addEventListener("click", createRoom);
+joinBtn.addEventListener("click", handleBtnClick);
 
-btnOne.addEventListener("click", handleBtnClick);
-btnTwo.addEventListener("click", handleBtnClick);
+function createRoom(e) {
+    e.preventDefault();
+
+    // Redirect to room and update page
+
+}
+
+socket.on("Hello!", () => {
+    console.log("test")
+})
 
 function handleBtnClick(e) {
     e.preventDefault();
