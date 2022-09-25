@@ -1,4 +1,4 @@
-const { Model, DataTypes, Sequelize } = require("sequelize");
+const { DataTypes, Sequelize } = require("sequelize");
 const sequelize = require("../config/connection");
 
 const Room = sequelize.define("Room", {
@@ -14,7 +14,6 @@ const Room = sequelize.define("Room", {
         allowNull: false,
         validate: {
             async isAlreadyActive(value) {
-                console.log(value);
                 const rooms = await Room.findAll({
                     where: {
                         room_code: value,

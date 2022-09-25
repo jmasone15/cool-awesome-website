@@ -15,7 +15,16 @@ joinBtn.addEventListener("click", handleBtnClick);
 function createRoom(e) {
     e.preventDefault();
 
-    // Redirect to room and update page
+    fetch("http://localhost:3001/create").then(res => {
+        res.json().then(data => {
+            if (data.success) {
+                socket.emit("create", data.room.room_code)
+                console.log(data)
+            } else {
+                alert("Error creating room.")
+            }
+        })
+    })
 
 }
 
@@ -30,7 +39,7 @@ function handleBtnClick(e) {
     socket.emit("join", room);
 }
 
-socket.on("joined", room => {
+socket.on("created", room => {
     currentRoom = room;
     roomHeader.innerText = `Welcome to Room ${currentRoom}`;
     defaultDiv.setAttribute("class", "display-none");

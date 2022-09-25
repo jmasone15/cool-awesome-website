@@ -6,6 +6,7 @@ const http = require('http');
 const sequelize = require("./config/connection");
 const routes = require("./routes");
 const session = require("express-session");
+const { Room } = require("./models");
 
 // Express Initilization
 const app = express();
@@ -13,11 +14,10 @@ const PORT = process.env.PORT || 3001;
 
 // Socket Setup
 const server = http.createServer(app);
-const { Server } = require("socket.io");
-const io = new Server(server);
+const socketIo = require("./middleware/socket");
+const io = socketIo.getIo(server);
 
 // Middleware
-app.use(require("./middleware/socketmw")(io));
 require("dotenv").config();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -31,8 +31,23 @@ app.use(session({
   },
   name: "user",
   resave: false
-}))
-app.use(routes);
+}));
+
+// Routes
+app.get("/create", async (req, res) => {
+    let code = "";
+    const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    for (let i = 0; i < 4; i++) {
+      code += possible.charAt(Math.floor(Math.random() * possible.length));
+    }
+
+    const newRoom = await Room.create({
+      room_code: code,
+      owner: req.session.id
+    });
+
+    return res.status(200).json({ success: true, room: newRoom })
+});
 
 // Socket
 // io.on("connection", socket => {
@@ -55,4 +70,7 @@ server.listen(PORT, () => {
   console.log(`🌎 Server Listening at: http://localhost:${PORT} 🌎`);
   sequelize.sync({ force: true });
   console.log("MySQL Database Connected successfully");
+  io.on("connection", socket => {
+    socket.emit("init")
+  });
 });
