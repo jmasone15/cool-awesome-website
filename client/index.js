@@ -1,26 +1,55 @@
 const socket = io();
-const btnOne = document.getElementById("button1");
-const btnTwo = document.getElementById("button2");
+const createBtn = document.getElementById("create");
+const joinBtn = document.getElementById("join");
 const roomHeader = document.getElementById("room-header");
 const form = document.getElementById("form");
 const input = document.getElementById("input");
 const messages = document.getElementById("messages");
 const defaultDiv = document.getElementById("default");
 const roomDiv = document.getElementById("room");
+const roomInput = document.getElementById("roomInput");
 let currentRoom;
 
-socket.on("init", msg => {
-    console.log(msg);
-});
+createBtn.addEventListener("click", createRoom);
+joinBtn.addEventListener("click", joinRoom);
 
-btnOne.addEventListener("click", handleBtnClick);
-btnTwo.addEventListener("click", handleBtnClick);
-
-function handleBtnClick(e) {
+function createRoom(e) {
     e.preventDefault();
 
-    const room = e.target.getAttribute("room");
-    socket.emit("join", room);
+    fetch("http://localhost:3001/api/room/create").then(res => {
+        res.json().then(data => {
+            if (data.success) {
+                socket.emit("join", data.room.room_code)
+            } else {
+                alert("Error creating room.")
+            }
+        })
+    })
+
+}
+
+function joinRoom(e) {
+    e.preventDefault();
+
+    if (!roomInput.value) {
+        return alert("Please enter a room code")
+    }
+
+    const requestOptions = {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ room_code: roomInput.value })
+    }
+
+    fetch("http://localhost:3001/api/room/join", requestOptions)
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                alert("No room found with that code")
+            } else {
+                socket.emit("join", data.room.room_code)
+            }
+        })
 }
 
 socket.on("joined", room => {
