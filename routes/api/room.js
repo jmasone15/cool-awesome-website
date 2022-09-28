@@ -22,6 +22,35 @@ router.post("/join", async (req, res) => {
     if (!existingRoom) {
         return res.json({ success: false })
     } else {
+
+        //get existing users
+        let user_list = existingRoom.users;
+        let id = req.session.id;
+        let users = []
+
+        //owner is attempting to join their own room
+        if(id == existingRoom.owner){
+            return res.json({ success: false })
+        }
+
+        //append current session id to users
+        if(!user_list){
+            users.push(id);
+        }
+        else{
+            users = JSON.parse(user_list);
+
+            //id already found in users
+            if(users.indexOf(id) > -1){
+                return res.json({ success: false })
+            }
+            users.push(id);
+        }
+
+        //create JSON string of users and save to db
+        existingRoom.users = JSON.stringify(users);
+        await existingRoom.save();
+
         return res.json({ success: true, room: existingRoom })
     }
 });
