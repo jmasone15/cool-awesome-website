@@ -29,19 +29,19 @@ router.post("/join", async (req, res) => {
         let users = []
 
         //owner is attempting to join their own room
-        if(id == existingRoom.owner){
+        if (id === existingRoom.owner) {
             return res.json({ success: false })
         }
 
         //append current session id to users
-        if(!user_list){
+        if (!user_list) {
             users.push(id);
         }
-        else{
+        else {
             users = JSON.parse(user_list);
 
             //id already found in users
-            if(users.indexOf(id) > -1){
+            if (users.indexOf(id) > -1) {
                 return res.json({ success: false })
             }
             users.push(id);
@@ -52,6 +52,26 @@ router.post("/join", async (req, res) => {
         await existingRoom.save();
 
         return res.json({ success: true, room: existingRoom })
+    }
+});
+
+router.post("/leave", async (req, res) => {
+
+    const existingRoom = await Room.findOne({ where: { room_code: req.body.room_code, active_ind: true } });
+
+    if (!existingRoom) {
+        return res.status(400).json({ success: false, msg: "Room does not exist." })
+    }
+
+    // Shut down room if no other users
+    if (!existingRoom.users) {
+        await existingRoom.update({ active_ind: false });
+        return res.status(200).json({ success: true })
+    } else {
+        // Make first user in list new owner
+        const users = JSON.parse(existingRoom.users);
+        await existingRoom.update({ owner: users[0], users: JSON.stringify(users.splice(0, 1)) });
+        res.status(200).json({ success: true });
     }
 });
 
